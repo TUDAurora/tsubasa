@@ -85,11 +85,11 @@ public:
 class WallClockStopWatch : public StopWatch< long > {
 protected:
 
-    long now() const {
+    inline long now() const {
         asm( "smir %s0, %usrcc" );
     }
 
-    double diff() const {
+    inline double diff() const {
         return ( (double)((double)endTime - (double) startTime) ) / ( (double)(1400*1000*1000) );
     }
 };

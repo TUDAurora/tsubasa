@@ -55,6 +55,8 @@ struct SIMDInstrs {
     inline static __mXi add(uint64_t dummy,__mXi vec1, __mXi vec2);
     inline static __mXi andnot_siX(__mXi vec1, __mXi vec2);
     inline static uint64_t extract_lowest_epi64(__mXi vec);
+    template< typename T >
+    inline static __mXi srli_epiX( __mXi val, int imm8 );
 };
 
 /**
@@ -90,7 +92,7 @@ __m128i SIMDInstrs<__m128i>::set1(uint32_t val) {
 }
 template<>
 __m128i SIMDInstrs<__m128i>::set1(uint64_t val) {
-    return _mm_set1_epi32(val);
+    return _mm_set1_epi64( reinterpret_cast<__m64>( val ) );
 }
 template<>
 uint64_t SIMDInstrs<__m128i>::cmpeq_epi32_mask(__m128i vec1, __m128i vec2) {
@@ -119,6 +121,14 @@ __m128i SIMDInstrs<__m128i>::andnot_siX(__m128i vec1, __m128i vec2) {
 template<>
 uint64_t SIMDInstrs<__m128i>::extract_lowest_epi64(__m128i vec) {
     return _mm_extract_epi64(vec, 0);
+}
+template<>template<>
+__m128i SIMDInstrs<__m128i>::srli_epiX< uint32_t >( __m128i val, int imm8 ) {
+    return _mm_srli_epi32( val, imm8 );
+}
+template<>template<>
+__m128i SIMDInstrs<__m128i>::srli_epiX< uint64_t >( __m128i val, int imm8 ) {
+    return _mm_srli_epi64( val, imm8 );
 }
 template<>
 __m128i SIMDLoad<__m128i, ALIGNED>::load(__m128i* ptr) {
@@ -161,7 +171,7 @@ __m256i SIMDInstrs<__m256i>::set1(uint32_t val) {
 }
 template<>
 __m256i SIMDInstrs<__m256i>::set1(uint64_t val) {
-    return _mm256_set1_epi32(val);
+    return _mm256_set1_epi64x(val);
 }
 template<>
 uint64_t SIMDInstrs<__m256i>::cmpeq_epi32_mask(__m256i vec1, __m256i vec2) {
@@ -186,6 +196,14 @@ __m256i SIMDInstrs<__m256i>::add(uint64_t dummy, __m256i vec1, __m256i vec2) {
 template<>
 __m256i SIMDInstrs<__m256i>::andnot_siX(__m256i vec1, __m256i vec2) {
     return _mm256_andnot_si256(vec1, vec2);
+}
+template<>template<>
+__m256i SIMDInstrs<__m256i>::srli_epiX< uint32_t >( __m256i val, int imm8 ) {
+    return _mm256_srli_epi32( val, imm8 );
+}
+template<>template<>
+__m256i SIMDInstrs<__m256i>::srli_epiX< uint64_t >( __m256i val, int imm8 ) {
+    return _mm256_srli_epi64( val, imm8 );
 }
 template<>
 uint64_t SIMDInstrs<__m256i>::extract_lowest_epi64(__m256i vec) {
@@ -232,7 +250,7 @@ __m512i SIMDInstrs<__m512i>::set1(uint32_t val) {
 }
 template<>
 __m512i SIMDInstrs<__m512i>::set1(uint64_t val) {
-    return _mm512_set1_epi32(val);
+    return _mm512_set1_epi64(val);
 }
 template<>
 uint64_t SIMDInstrs<__m512i>::cmpeq_epi32_mask(__m512i vec1, __m512i vec2) {
@@ -261,6 +279,14 @@ __m512i SIMDInstrs<__m512i>::andnot_siX(__m512i vec1, __m512i vec2) {
 template<>
 uint64_t SIMDInstrs<__m512i>::extract_lowest_epi64(__m512i vec) {
     return _mm_extract_epi64(_mm512_extracti32x4_epi32(vec, 0), 0);
+}
+template<>template<>
+__m512i SIMDInstrs<__m512i>::srli_epiX< uint32_t >( __m512i val, int imm8 ) {
+    return _mm512_srli_epi32( val, imm8 );
+}
+template<>template<>
+__m512i SIMDInstrs<__m512i>::srli_epiX< uint64_t >( __m512i val, int imm8 ) {
+    return _mm512_srli_epi64( val, imm8 );
 }
 template<>
 __m512i SIMDLoad<__m512i, ALIGNED>::load(__m512i* ptr) {
