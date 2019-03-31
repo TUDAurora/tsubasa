@@ -1,41 +1,60 @@
 /** 
 *   @file sh_mem.cpp
-*   @brief Testing auroras shared memory. spawns 2 processes and shared memory
+*   @brief Testing auroras shared memory. creates one shared memory and fill it with "hello world"
 *
 *
 *   @author Johannes Fett
 *
 *   @date 2/4/2019
 */
+#include  <sys/types.h>
+#include  <sys/ipc.h>
+#include  <sys/shm.h>
+#include  <stdio.h>
+#include<iostream>
+using namespace std; 
 
-int main(){
+int main()
+{
+
+
+    
+int shm_id;       
+int err; 
+key_t key = 9988;
 
 /*
-String version = veo_version_string(void);
-proc_handle = veo_proc_create(nodeid);
-proc_handle = veo_proc_create_static(nodeid, veorun_path);
-rc = veo_proc_destroy(proc_handle);
-lib_id = veo_load_library(proc_handle, lib_path);
-addr = veo_get_sym(proc_handle, lib_id, sym_name);
-rc = veo_alloc_mem(proc_handle, &ve_addr, len);
-rc = veo_free_mem(proc_handle, ve_addr);
-rc = veo_read_mem(proc_handle, vh_buff, ve_addr, len);
-rc = veo_write_mem(proc_handle, ve_addr, vh_buff, len);
-ctxt = veo_context_open(proc_handle);
-rc = veo_context_close(ctxt);
-res = veo_get_context_state(ctxt);
-args = veo_args_alloc();
-rc = veo_args_set_i64(arg, argnum, i64);
-rc = veo_args_set_double(arg, argnum, double_d);
-rc = veo_args_set_stack(arg, intent, argnum, buff, len);
-veo_args_clear(arg);
-veo_args_free(arg);
-req_id = veo_async_read_mem(ctxt, vh_buff, ve_addr, len);
-req_id = veo_async_write_mem(ctxt, ve_addr, vh_buff, len);
-req_id = veo_call_async(ctxt, addr, args);
-rc = veo_call_peek_result(ctxt, req_id, &result);
-rc = veo_call_wait_result(ctxt, req_id, &result);
-
+create and use ftok key, does not work. shmget returns an error in this case
+char *path = "/tmp";
+int id = 'S';
+key_t key = ftok(path,id);
 */
+
+//create shared memory. 
+shm_id = shmget(key, 32*sizeof(int), IPC_CREAT|0666);
+
+//shm_id is -1 in case shmget fails to allocate shared memory
+if (shm_id < 0) {
+     printf("shmget error: %i\n %s ",err,strerror(errno));
+     
+}
+printf("shared mem created. ID: %i \n",shm_id);
+
+ // attach shared memory to proccess memory with shmat. also write string into it
+    char *str = (char*) shmat(shm_id,(void*)0,0);
+    
+    memcpy(str,"Hello World",11);
+
+    printf("%s \n",str);
+     
+//wait until user input
+printf("waiting for other process...\n ");
+std::cin.get();
+printf("ending process now. freeing ressources \n");
+
+//deattach from shared mem
+shmdt(str); 
+//destroy shared mem
+shmctl(shm_id,IPC_RMID,NULL); 
 
 }

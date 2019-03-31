@@ -14,7 +14,7 @@
 #include <limits.h> 
 #include <stdio.h>                                                                                                                               
 #include <stdlib.h>
-
+#include <iostream>
 #include <time.h>
 #include <math.h>
 
@@ -74,22 +74,32 @@ static inline long getTimestamp(){
 int main()
 {
 long start= getTimestamp();
+long random_number_time; 
+long selection_time;
 //it depends on the size if the calculation gets vectorized
 //set the size of the input data, randomly generated
-//autovectorize up to 131072 elements, which equals 4096kb of memory
-int datasize = 10240000;
 
+int datasize = 102400000;
+
+uint32_t data[datasize];
+uint32_t result[datasize];
+
+
+for( uint32_t i = 0; i < datasize; ++i ) {
+      data[ i ]= rand() %100000;
+      result[i]=0;
+   }
 //generate random input data
-int * data = createIntArrayRandomNumbers(datasize );
-bool * result = createBoolempty(datasize);
+
+
 
 
 //Selection calculation
 
 //set up constants
  
-    const int lower = 0;    
-    const int upper = 250000;
+    const int lower = 15000;    
+    const int upper = 85000;
     const char lowerSet = 0;
     const char upperSet = 1;
     const char lowerInclusive = 1;
@@ -97,24 +107,27 @@ bool * result = createBoolempty(datasize);
     const char anti = 0;
 
 bool res;
-int val;
+uint32_t val;
+uint32_t  *d2;
+bool *r2;
 
-#pragma _NEC outerloop_unroll(1024)
-for(int i= 0; i<datasize; i+=256)
+random_number_time = getTimestamp() -start;
+printf("Time for creating random array of ints: %i ms \n",random_number_time); 
+
+start= getTimestamp();
+
+ 
+for(int i= 0; i<datasize; i++)
 {
 
-//#pragma _NEC shortloop
-for(int k =0; k<datasize/256;k++)
-{
+ 
 
-
-val = data[k];
-SELECTION(val);
-result[k] = res;
+SELECTION(data[i]);
+result[i] = res;
 
 }
 
-}
+
 
 int hits=0;
 
@@ -128,7 +141,7 @@ for(int f=0;f<datasize;f++)
 float phit = (float)hits / (float)datasize;
 long end = getTimestamp();
 long dif = end-start;
-printf("hits: %i  percentage of hits: %f %%\nTime needed: %i ms \n",hits,100*phit, dif);
+printf("hits: %i  percentage of hits: %f %%\nTime needed for selection: %i ms \n",hits,100*phit, dif);
 
 
 }
