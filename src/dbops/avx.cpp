@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
 #include <immintrin.h>
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
@@ -12,10 +14,7 @@
   (byte & 0x02 ? '1' : '0'), \
   (byte & 0x01 ? '1' : '0') 
 
-
-int main()
-{
-
+void wait(void){
 __m256i result,cd;
 __m256i a,b;
 a= _mm256_setr_epi32(0,0,2,0,4,0,6,6);
@@ -36,7 +35,28 @@ int * res = (int*) &cd;
         printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(res[i]));
         printf("\n");
     }
-   
+}
+int main()
+{
+for(int i =0;i<8;i++){
+ pthread_t thread;
+    int err;
+
+    err = pthread_create(&thread, NULL, wait, NULL);
+
+    if (err)
+    {
+        printf("An error occured: %d", err);
+        return 1;
+    }
+
+    printf("Waiting for the thread to end...\n");
+
+    pthread_join(thread, NULL);
+
+    printf("Thread ended.\n");    
 
     
+}
+return 0;
 }
