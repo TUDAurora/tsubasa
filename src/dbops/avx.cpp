@@ -100,21 +100,23 @@ __m512i b,cd2;
 
 
 
-cout <<"BITSET AVXCD MM512: "<<endl;
+//cout <<"BITSET AVXCD MM512: "<<endl;
 
 //write 1 in return bitset if a conflict occurs
 
 for (int k=0;k<16;k++)
 {
-bitset<16> test = DoCD(in,k*16);
-for(int i=0;i<16;i++)
+bitset<16> test = DoCD(in,k*15);
+
+for(int i=1;i<16;i++)
 {
-rest[k*16+i]=test[i];
-cout<<i<<" "<<rest[k*i]<<endl;
+rest[k*15+i]=test[i];
+//cout<<i<<" "<<rest[k*i]<<endl;
 }
 
 }
-
+//write 0 to first element (can not be conflict ever)
+rest[0]=0;
 
 
 
@@ -188,6 +190,7 @@ int main()
 {
     size_t datasize = 256;
     vector<uint32_t> input(224);
+    vector<uint32_t> unsorted_input(256);
     
     //unsorted input data
     
@@ -200,7 +203,7 @@ int main()
         index[i]=i;
     }
 
-    
+    unsorted_input= input;
     printvec(input,"input");
 
     //generate permutation list 
@@ -234,18 +237,19 @@ for(int i =0;i<input.size();i++)
 }
 cout <<endl;
 
-for(int i =0;i<256;i++)
+for(int i =0;i<output.size();i++)
 {
 
 output[index[i]]=result[i];
 }
 
-cout<< "conflicts sorted: ";
+cout<< "conflicts sorted: "<<endl;
 for(int i =0;i<input.size();i++)
 {
-    cout<<" "<<output[i]<<" ";
+    cout<<"input: " <<unsorted_input[i]<<" i: "<<i<<" out "<<output[i]<<endl;
 }
 cout <<endl;
+
 cout <<"number of conflicts: "<<output.count()<<endl;
 
 return 0;
