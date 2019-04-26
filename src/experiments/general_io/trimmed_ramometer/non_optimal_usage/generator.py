@@ -491,7 +491,10 @@ def construct_write(variants, write_fname):
             result.append(write_test_file)
     return result
 
-variants = [Variant32(), Variant64()]
+variants = [
+	#Variant32(),
+	Variant64()
+]
 
 tests = [
     construct_read(variants, "read"),
@@ -626,9 +629,10 @@ for variant in variants:
     impl.add_cline("      operator_repetitions = 100;")
     impl.add_cline("   else")
     impl.add_cline("      operator_repetitions = 10;")
+    impl.add_cline("   std::cerr << \"Processing \" << buffer_size << \" Byte. \";")
     impl.add_cline(
         "   measurement" + variant.suffix +
-        "( in, out, buffer_size / sizeof( uint32_t ), test_repetitions, operator_repetitions );"
+        "( in, out, buffer_size / sizeof( " + variant.data_type + " ), test_repetitions, operator_repetitions );"
     )
     impl.add_cline("   free( out_orig );")
     impl.add_cline("   free( in_orig );")
