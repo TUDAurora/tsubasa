@@ -491,8 +491,84 @@ def construct_write(variants, write_fname):
             result.append(write_test_file)
     return result
 
+def construct_write_stream(variants, write_fname):
+    operator_name = "write_stream"
+    result = []
+    for variant in variants:
+        write_file = CppFile(
+            write_fname + variant.suffix,
+            ["cstddef", "cstdint"],
+            ["utils"]
+        )
+        write_test_file = CppFile(
+            "test_" + write_fname + variant.suffix,
+            ["cstddef", "cstdint","ctime", "iostream"],
+            [write_fname + variant.suffix]
+        )
+        for loop_width in range(1, variant.loop_width_upperbound):
+            specs = MethodSpecs(
+                variant.data_type,
+                operator_name + variant.suffix + "_" + str(loop_width),
+                [
+                    Parameter(variant.pointer_c_type, "p_out"),
+                    Parameter("size_t const", "p_length"),
+                    Parameter(variant.data_c_type, "p_val"),
+                ]
+            )
+            impl_specs = copy.deepcopy(specs)
+            impl_specs.add_param( Parameter("size_t const", "p_dummy") )
+
+            method = Method(
+                impl_specs
+            )
+            impl = Implementation()
+            impl.add_cline("size_t length = p_length / " + str(loop_width) + ";")
+            impl.add_prgma("#pragma _NEC noouterloop_unroll")
+            if variant.has_vector_pragma:
+                impl.add_prgma(variant.vector_pragma)
+            impl.add_cline("for( size_t outer = 0; outer < length; outer += " + str(loop_width) + " ) {")
+            impl.add_prgma("#pragma _NEC shortloop")
+            if variant.has_vector_pragma:
+                impl.add_prgma(variant.vector_pragma)
+            impl.add_cline("   for( size_t inner = outer; inner < " + str(loop_width) + "; ++inner ) {")
+            impl.add_cline("      p_out[ outer + inner ] = p_val;")
+            impl.add_cline("   }")
+            impl.add_cline("}")
+            impl.add_cline("for( size_t i = length; i < p_length; ++i ) {")
+            impl.add_cline("   p_out[ i ] = p_val;")
+            impl.add_cline("}")
+            impl.add_cline("return p_out[ p_dummy ];")
+            method.set_impl(impl)
+            write_file.add_method(
+                method
+            )
+            write_file.write()
+
+            test = Test(
+                copy.deepcopy(specs),
+                create_impl(
+                    [
+                        "srand( time( NULL ) );",
+                        "size_t dummy = rand( ) % p_length;",
+                        variant.data_type + " result = " + operator_name + variant.suffix + "_" + str(
+                            loop_width) + "( " +
+                        "p_out, p_length, p_val, dummy );"
+                    ]
+                ),
+                Implementation(
+                    "      result |= " + operator_name + variant.suffix + "_" + str(loop_width) +
+                    "( p_out, p_length, p_val, dummy );"
+                ),
+                Implementation("   return result;"),
+                "Write;" + variant.bw + ";" + str(loop_width)
+            )
+            write_test_file.add_method(test)
+            write_test_file.write()
+            result.append(write_test_file)
+    return result
+
 variants = [
-	#Variant32(),
+	Variant32(),
 	Variant64()
 ]
 
@@ -500,6 +576,7 @@ tests = [
     construct_read(variants, "read"),
     construct_copy(variants, "copy"),
     construct_write(variants, "write")
+    construct_write_stream(variants, "write_stream")
 ]
 
 general_test_headers = ["utils"]
